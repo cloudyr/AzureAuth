@@ -220,7 +220,8 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
     auth_type <- select_auth_type(password, username, certificate, auth_type)
-    client <- aad_request_credentials(app, password, username, certificate, auth_type)
+    client <- aad_request_credentials(app, password, username, certificate, auth_type,
+                                      tenant, aad_host, version)
 
     if(version == 1)
         scope <- NULL

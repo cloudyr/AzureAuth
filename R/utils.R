@@ -39,7 +39,7 @@ decode_jwt <- function(token)
 }
 
 
-aad_request_credentials <- function(app, password, username, certificate, auth_type)
+aad_request_credentials <- function(app, password, username, certificate, auth_type, tenant, aad_host, version)
 {
     obj <- list(client_id=app, grant_type=auth_type)
 
@@ -57,6 +57,13 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
             obj$client_secret <- password
         else if(!is.null(certificate))
         {
+            # integrate with AzureKeyVault certificates
+            if(inherits(certificate, "cert_creds"))
+            {
+                certificate$claims <- build_claims(certificate, tenant, app, aad_host, version)
+                certificate <- sign_creds(certificate)
+            }
+
             obj$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
             obj$client_assertion <- certificate
         }
