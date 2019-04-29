@@ -187,7 +187,9 @@ private=list(
     aad_endpoint=function(type)
     {
         uri <- httr::parse_url(self$aad_host)
-        uri$path <- file.path(self$tenant, "oauth2", type)
+        uri$path <- if(nchar(uri$path) == 0)
+            file.path(self$tenant, "oauth2", type)
+        else file.path(uri$path, type)
         httr::build_url(uri)
     }
 
@@ -221,7 +223,9 @@ private=list(
     aad_endpoint=function(type)
     {
         uri <- httr::parse_url(self$aad_host)
-        uri$path <- file.path(self$tenant, "oauth2/v2.0", type)
+        uri$path <- if(nchar(uri$path) == 0)
+            file.path(self$tenant, "oauth2/v2.0", type)
+        else file.path(uri$path, type)
         httr::build_url(uri)
     }
 ))
