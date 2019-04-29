@@ -32,7 +32,7 @@ sign_creds.cert_creds <- function(creds, ...)
         paste0("RS", creds$size)
     else paste0("ES", creds$size)
 
-    sig <- creds$cert$sign(openssl::sha2(charToRaw(token_conts), size=size), alg)
+    sig <- creds$cert$sign(openssl::sha2(charToRaw(token_conts), size=creds$size), alg)
     paste(token_conts, sig, sep=".")
 }
 
