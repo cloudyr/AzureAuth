@@ -7,7 +7,7 @@
 #' @param app The client/app ID to use to authenticate with.
 #' @param password The password, either for the app, or your username if supplied. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
-#' @param certificate A certificate to authenticate with.
+#' @param certificate A JSON web token (JWT) containing an assertion signed with a certificate. You can use the `cert_assertion` function to build the token given a certificate object from the AzureKeyVault package. See 'Details' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
 #' @param version The AAD version, either 1 or 2.
@@ -32,7 +32,7 @@
 #' 
 #' 2. The **device_code** method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, `get_azure_token` contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, `get_azure_token` polls the AAD access endpoint for a token, which is provided once you have entered the code.
 #' 
-#' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it either the app secret or the certificate (which you supply in the `password` or `certificate` argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
+#' 3. The **client_credentials** method is much simpler than the above methods, requiring only one step. `get_azure_token` contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the `password` or `certificate` argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 #' 
 #' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
@@ -222,8 +222,11 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
     auth_type <- select_auth_type(password, username, certificate, auth_type)
-    client <- aad_request_credentials(app, password, username, certificate, auth_type,
-                                      tenant, aad_host, version)
+
+    # integrating with AzureKeyVault certs
+    certificate <- build_assertion(certificate, self$tenant, app, self$version)
+
+    client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
     if(version == 1)
         scope <- NULL

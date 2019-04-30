@@ -48,7 +48,7 @@ is_azure_v2_token(object)
 
 \item{username}{Your AAD username, if using the resource owner grant. See 'Details' below.}
 
-\item{certificate}{A certificate to authenticate with.}
+\item{certificate}{A JSON web token (JWT) containing an assertion signed with a certificate. You can use the \code{cert_assertion} function to build the token given a certificate object from the AzureKeyVault package. See 'Details' below.}
 
 \item{auth_type}{The authentication type. See 'Details' below.}
 
@@ -87,7 +87,7 @@ One particular use of the \code{authorize_args} argument is to specify a differe
 \enumerate{
 \item Using the \strong{authorization_code} method is a multi-step process. First, \code{get_azure_token} opens a login window in your browser, where you can enter your AAD credentials. In the background, it loads the \href{https://github.com/rstudio/httpuv}{httpuv} package to listen on a local port. Once you have logged in, the AAD server redirects your browser to a local URL that contains an authorization code. \code{get_azure_token} retrieves this authorization code and sends it to the AAD access endpoint, which returns the OAuth token.
 \item The \strong{device_code} method is similar in concept to authorization_code, but is meant for situations where you are unable to browse the Internet -- for example if you don't have a browser installed or your computer has input constraints. First, \code{get_azure_token} contacts the AAD devicecode endpoint, which responds with a login URL and an access code. You then visit the URL and enter the code, possibly using a different computer. Meanwhile, \code{get_azure_token} polls the AAD access endpoint for a token, which is provided once you have entered the code.
-\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
+\item The \strong{client_credentials} method is much simpler than the above methods, requiring only one step. \code{get_azure_token} contacts the access endpoint, passing it either the app secret or the certificate assertion (which you supply in the \code{password} or \code{certificate} argument respectively). Once the credentials are verified, the endpoint returns the token. This is the method typically used by service accounts.
 \item The \strong{resource_owner} method also requires only one step. In this method, \code{get_azure_token} passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 }
 

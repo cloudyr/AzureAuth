@@ -38,8 +38,10 @@ public=list(
         self$tenant <- normalize_tenant(tenant)
         self$auth_type <- select_auth_type(password, username, certificate, auth_type)
 
-        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type,
-                                               tenant, aad_host, self$version)
+        # integrating with AzureKeyVault certs
+        certificate <- build_assertion(certificate, self$tenant, app, self$version)
+
+        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type)
 
         self$authorize_args <- authorize_args
         self$token_args <- token_args

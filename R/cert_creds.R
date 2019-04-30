@@ -1,55 +1,75 @@
-cert_creds <- function(certificate, ...)
+#' @export
+cert_assertion <- function(certificate, ...)
 {
-    UseMethod("cert_creds")
+    UseMethod("cert_assertion")
 }
 
 
-cert_creds.stored_cert <- function(certificate, expiry_date=NULL, activation_date=NULL, key_size=256, ...)
+#' @export
+cert_assertion.stored_cert <- function(certificate, expiry_date=NULL, activation_date=NULL, signature_size=256, ...)
 {
     claim <- jose::jwt_claim(exp=expiry_date, nbf=activation_date, ...)
-    structure(list(cert=certificate, claim=claim, size=key_size), class="cert_creds")
+    structure(list(cert=certificate, claim=claim, size=signature_size), class="cert_assertion")
 }
 
 
-sign_creds <- function(creds, ...)
+build_assertion <- function(assertion, ...)
 {
-    UseMethod("sign_cert")
+    UseMethod("build_assertion")
 }
 
 
-sign_creds.cert_creds <- function(creds, ...)
+build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version, ...)
+{
+    assertion$claims$iss <- app
+    assertion$claims$sub <- app
+
+    url <- httr::parse_url(aad_host)
+    if(url$path != "")
+    {
+        url$path <- if(version == 1)
+            file.path(tenant, "oauth2/token")
+        else file.path(tenant, "oauth2/v2.0/token")
+    }
+    assertion$claims$aud <- httr::build_url(url)
+
+    if(!is_empty(list(...)))
+        assertion$claims <- utils::modifyList(claims, list(...))
+
+    sign_assertion(assertion$certificate, assertion$claims, assertion$size)
+}
+
+
+build_assertion.default <- function(assertion, ...)
+{
+    if(is.null(assertion) || (is.character(assertion) && length(assertion) == 1))
+        assertion
+    else stop("Invalid certificate assertion", call.=FALSE)
+}
+
+
+sign_assertion <- function(certificate, claim, size)
+{
+    UseMethod("sign_assertion")
+}
+
+
+sign_assertion.stored_cert <- function(certificate, claim, size)
 {
     token_encode <- function(x)
     {
         jose::base64url_encode(jsonlite::toJSON(x, auto_unbox=TRUE))
     }
 
-    header <- list(alg=creds$alg, x5t=creds$cert$x5t, typ="JWT")
-    token_conts <- paste(token_encode(header), token_encode(creds$claim), sep=".")
-
     kty <- creds$cert$policy$key_props$kty  # key type determines signing alg
     alg <- if(kty == "RSA")
-        paste0("RS", creds$size)
-    else paste0("ES", creds$size)
+        paste0("RS", size)
+    else paste0("ES", size)
 
-    sig <- creds$cert$sign(openssl::sha2(charToRaw(token_conts), size=creds$size), alg)
+    header <- list(alg=alg, x5t=certificate$x5t, typ="JWT")
+    token_conts <- paste(token_encode(header), token_encode(creds$claim), sep=".")
+
+    sig <- certificate$sign(openssl::sha2(charToRaw(token_conts), size=size), alg)
     paste(token_conts, sig, sep=".")
 }
 
-
-build_claims <- function(creds, tenant, app, aad_host, version, ...)
-{
-    claims <- creds$claims
-    claims$iss <- app
-    claims$sub <- app
-
-    url <- httr::parse_url(aad_host)
-    url$path <- if(version == 1)
-        file.path(tenant, "oauth2/token")
-    else file.path(tenant, "oauth2/v2.0/token")
-    claims$aud <- httr::build_url(url)
-
-    if(!is_empty(list(...)))
-        claims <- utils::modifyList(claims, list(...))
-    claims
-}
