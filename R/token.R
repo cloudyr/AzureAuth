@@ -224,7 +224,7 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     auth_type <- select_auth_type(password, username, certificate, auth_type)
 
     # integrating with AzureKeyVault certs
-    certificate <- build_assertion(certificate, self$tenant, app, self$version)
+    certificate <- build_assertion(certificate, tenant, app, aad_host, version)
 
     client <- aad_request_credentials(app, password, username, certificate, auth_type)
 

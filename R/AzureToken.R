@@ -39,7 +39,7 @@ public=list(
         self$auth_type <- select_auth_type(password, username, certificate, auth_type)
 
         # integrating with AzureKeyVault certs
-        certificate <- build_assertion(certificate, self$tenant, app, self$version)
+        certificate <- build_assertion(certificate, self$tenant, app, self$aad_host, self$version)
 
         self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type)
 
