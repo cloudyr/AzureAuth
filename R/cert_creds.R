@@ -20,7 +20,7 @@
 #' cert_assertion("mycert.pem", duration=2*3600)
 #' cert_assertion("mycert.pem", custom_data="some text")
 #'
-#' # using a cert stored in Key Vault
+#' # using a cert stored in Azure Key Vault
 #' cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
 #' cert_assertion(cert, duration=2*3600)
 #' 

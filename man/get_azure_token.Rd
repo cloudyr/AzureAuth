@@ -169,11 +169,16 @@ delete_azure_token(resource="https://myresource/", tenant="mytenant", app="app_i
 delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
 
 
+# authenticating for B2C logins (custom AAD host)
+get_azure_token("https://mydomain.com", "mytenant", "app_id", "password",
+    aad_host="https://mytenant.b2clogin.com/tfp/mytenant.onmicrosoft.com/custom/oauth2")
+
+
 # authenticating with a certificate
 get_azure_token("https://management.azure.com/", "mytenant", "app_id",
     certificate="mycert.pem")
 
-# authenticating via the AzureKeyVault package
+# authenticating with a certificate stored in Azure Key Vault
 cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
 get_azure_token("https://management.azure.com/", "mytenant", "app_id",
     certificate=cert)
