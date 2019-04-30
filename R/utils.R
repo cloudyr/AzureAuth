@@ -48,7 +48,7 @@ aad_request_credentials <- function(app, password, username, certificate, auth_t
         else if(!is.null(certificate))
         {
             obj$client_assertion_type <- "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-            obj$client_assertion <- certificate
+            obj$client_assertion <- certificate  # not actual assertion: will be replaced later
         }
         else stop("Must provide either a client secret or certificate assertion for client_credentials grant",
                   call.=FALSE)

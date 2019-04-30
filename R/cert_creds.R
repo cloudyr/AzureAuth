@@ -1,12 +1,5 @@
 #' @export
-cert_assertion <- function(certificate, ...)
-{
-    UseMethod("cert_assertion")
-}
-
-
-#' @export
-cert_assertion.stored_cert <- function(certificate, duration=3600, signature_size=256, ...)
+cert_assertion <- function(certificate, duration=3600, signature_size=256, ...)
 {
     structure(list(cert=certificate, duration=duration, size=signature_size, claims=list(...)),
               class="cert_assertion")
@@ -22,6 +15,13 @@ build_assertion <- function(assertion, ...)
 build_assertion.stored_cert <- function(assertion, ...)
 {
     build_assertion(cert_assertion(assertion), ...)
+}
+
+
+build_assertion.character <- function(assertion, ...)
+{
+    pair <- read_cert_pair(assertion)
+    build_assertion(cert_assertion(pair), ...)
 }
 
 
@@ -47,7 +47,7 @@ build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, ver
 
 build_assertion.default <- function(assertion, ...)
 {
-    if(is.null(assertion) || (is.character(assertion) && length(assertion) == 1))
+    if(is.null(assertion))
         assertion
     else stop("Invalid certificate assertion", call.=FALSE)
 }
@@ -61,11 +61,6 @@ sign_assertion <- function(certificate, claim, size)
 
 sign_assertion.stored_cert <- function(certificate, claim, size)
 {
-    token_encode <- function(x)
-    {
-        jose::base64url_encode(jsonlite::toJSON(x, auto_unbox=TRUE))
-    }
-
     kty <- certificate$policy$key_props$kty  # key type determines signing alg
     alg <- if(kty == "RSA")
         paste0("RS", size)
@@ -74,7 +69,44 @@ sign_assertion.stored_cert <- function(certificate, claim, size)
     header <- list(alg=alg, x5t=certificate$x5t, kid=certificate$x5t, typ="JWT")
     token_conts <- paste(token_encode(header), token_encode(claim), sep=".")
 
-    sig <- certificate$sign(openssl::sha2(charToRaw(token_conts), size=size), alg)
-    paste(token_conts, sig, sep=".")
+    paste(token_conts, certificate$sign(openssl::sha2(charToRaw(token_conts), size=size), alg), sep=".")
 }
 
+
+sign_assertion.openssl_cert_pair <- function(certificate, claim, size)
+{
+    alg <- if(inherits(certificate$key, "rsa"))
+        paste0("RS", size)
+    else if(inherits(certificate$key, "ecdsa"))
+        paste0("EC", size)
+    else stop("Unsupported key type", call.=FALSE)
+
+    x5t <- jose::base64url_encode(openssl::sha1(certificate$cert))
+    header <- list(x5t=x5t, kid=x5t)
+
+    jose::jwt_encode_sig(claim, certificate$key, size=size, header=header)
+}
+
+
+sign_assertion.character <- function(certificate, claim, size)
+{
+    pair <- read_cert_pair(certificate)
+    sign_assertion(pair, claim, size)
+}
+
+
+read_cert_pair <- function(file)
+{
+    pem <- openssl::read_pem(file)
+    obj <- list(
+        key=openssl::read_key(pem[["PRIVATE KEY"]]),
+        cert=openssl::read_cert(pem[["CERTIFICATE"]])
+    )
+    structure(obj, class="openssl_cert_pair")
+}
+
+
+token_encode <- function(x)
+{
+    jose::base64url_encode(jsonlite::toJSON(x, auto_unbox=TRUE))
+}
