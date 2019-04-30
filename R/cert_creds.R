@@ -6,17 +6,10 @@ cert_assertion <- function(certificate, ...)
 
 
 #' @export
-cert_assertion.stored_cert <- function(certificate, expiry_date=NULL, activation_date=NULL, signature_size=256, ...)
+cert_assertion.stored_cert <- function(certificate, duration=3600, signature_size=256, ...)
 {
-    as_num <- function(date)
-    {
-        if(is.null(date))
-            NULL
-        else as.numeric(as.POSIXct(date, origin="1970-01-01"))
-    }
-
-    claim <- jose::jwt_claim(exp=as_num(expiry_date), nbf=as_num(activation_date), ...)
-    structure(list(cert=certificate, claim=claim, size=signature_size), class="cert_assertion")
+    structure(list(cert=certificate, duration=duration, size=signature_size, claims=list(...)),
+              class="cert_assertion")
 }
 
 
@@ -26,11 +19,14 @@ build_assertion <- function(assertion, ...)
 }
 
 
-build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version, ...)
+build_assertion.stored_cert <- function(assertion, ...)
 {
-    assertion$claim$iss <- app
-    assertion$claim$sub <- app
+    build_assertion(cert_assertion(assertion), ...)
+}
 
+
+build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, version)
+{
     url <- httr::parse_url(aad_host)
     if(url$path == "")
     {
@@ -38,12 +34,14 @@ build_assertion.cert_assertion <- function(assertion, tenant, app, aad_host, ver
             file.path(tenant, "oauth2/token")
         else file.path(tenant, "oauth2/v2.0/token")
     }
-    assertion$claim$aud <- httr::build_url(url)
 
-    if(!is_empty(list(...)))
-        assertion$claim <- utils::modifyList(claim, list(...))
+    claim <- jose::jwt_claim(iss=app, sub=app, aud=httr::build_url(url),
+                             exp=as.numeric(Sys.time() + assertion$duration))
 
-    sign_assertion(assertion$cert, assertion$claim, assertion$size)
+    if(!is_empty(assertion$claims))
+        claim <- utils::modifyList(claim, assertion$claims)
+
+    sign_assertion(assertion$cert, claim, assertion$size)
 }
 
 
@@ -73,7 +71,7 @@ sign_assertion.stored_cert <- function(certificate, claim, size)
         paste0("RS", size)
     else paste0("ES", size)
 
-    header <- list(alg=alg, x5t=certificate$x5t, typ="JWT")
+    header <- list(alg=alg, x5t=certificate$x5t, kid=certificate$x5t, typ="JWT")
     token_conts <- paste(token_encode(header), token_encode(claim), sep=".")
 
     sig <- certificate$sign(openssl::sha2(charToRaw(token_conts), size=size), alg)

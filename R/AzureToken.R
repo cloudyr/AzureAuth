@@ -38,9 +38,6 @@ public=list(
         self$tenant <- normalize_tenant(tenant)
         self$auth_type <- select_auth_type(password, username, certificate, auth_type)
 
-        # integrating with AzureKeyVault certs
-        certificate <- build_assertion(certificate, self$tenant, app, self$aad_host, self$version)
-
         self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type)
 
         self$authorize_args <- authorize_args
@@ -183,6 +180,11 @@ private=list(
     build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
+
+        # integrating with AzureKeyVault certs
+        body$client_assertion <- build_assertion(body$client_assertion,
+            self$tenant, body$client_id, self$aad_host, self$version)
+
         c(body, self$authorize_args, resource=self$resource)
     },
 
@@ -219,6 +221,11 @@ private=list(
     build_access_body=function(body=self$client)
     {
         stopifnot(is.list(self$token_args))
+
+        # integrating with AzureKeyVault certs
+        body$client_assertion <- build_assertion(body$client_assertion,
+            self$tenant, body$client_id, self$aad_host, self$version)
+
         c(body, self$authorize_args, scope=paste(self$scope, collapse=" "))
     },
 

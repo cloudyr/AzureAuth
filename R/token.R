@@ -7,7 +7,7 @@
 #' @param app The client/app ID to use to authenticate with.
 #' @param password The password, either for the app, or your username if supplied. See 'Details' below.
 #' @param username Your AAD username, if using the resource owner grant. See 'Details' below.
-#' @param certificate A JSON web token (JWT) containing an assertion signed with a certificate. You can use the `cert_assertion` function to build the token given a certificate object from the AzureKeyVault package. See 'Details' below.
+#' @param certificate A certificate object for authenticating with, a call to the `cert_assertion` function to build the assertion, or a string containing the JWT-encoded assertion. See 'Certificate authentication' below.
 #' @param auth_type The authentication type. See 'Details' below.
 #' @param aad_host URL for your AAD host. For the public Azure cloud, this is `https://login.microsoftonline.com/`. Change this if you are using a government or private cloud. Can also be a full URL, eg `https://mydomain.b2clogin.com/mydomain/other/path/names/oauth2`.
 #' @param version The AAD version, either 1 or 2.
@@ -104,6 +104,16 @@
 #'
 #' # delete a saved token by specifying its MD5 hash
 #' delete_azure_token(hash="7ea491716e5b10a77a673106f3f53bfd")
+#'
+#'
+#' # authenticating with a certificate (requires AzureKeyVault package)
+#' cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     certificate=cert)
+#'
+#' # get a token valid for 2 hours (default is 1 hour)
+#' get_azure_token("https://management.azure.com/", "mytenant", "app_id",
+#'     certificate=cert_assertion(cert, duration=2*3600)
 #'
 #' }
 #' @export
@@ -222,9 +232,6 @@ token_hash <- function(resource, tenant, app, password=NULL, username=NULL, cert
     version <- normalize_aad_version(version)
     tenant <- normalize_tenant(tenant)
     auth_type <- select_auth_type(password, username, certificate, auth_type)
-
-    # integrating with AzureKeyVault certs
-    certificate <- build_assertion(certificate, tenant, app, aad_host, version)
 
     client <- aad_request_credentials(app, password, username, certificate, auth_type)
 
