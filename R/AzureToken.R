@@ -181,7 +181,7 @@ private=list(
     {
         stopifnot(is.list(self$token_args))
 
-        # integrating with AzureKeyVault certs
+        # fill in cert assertion details
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
@@ -222,7 +222,7 @@ private=list(
     {
         stopifnot(is.list(self$token_args))
 
-        # integrating with AzureKeyVault certs
+        # fill in cert assertion details
         body$client_assertion <- build_assertion(body$client_assertion,
             self$tenant, body$client_id, self$aad_host, self$version)
 
