@@ -1,3 +1,30 @@
+#' Create a client assertion for certificate authentication
+#'
+#' @param certificate An Azure Key Vault certificate object, or the name of a PEM file containing _both_ a private key and a public certificate.
+#' @param duration The requested validity period of the token, in seconds. The default is 1 hour.
+#' @param signature_size The size of the SHA2 signature.
+#' @param ... Other named arguments which will be treated as custom claims.
+#'
+#' @details
+#' Use this function to customise a client assertion for authenticating with a certificate.
+#'
+#' @return
+#' An object of S3 class `cert_assertion`, which is a list representing the assertion.
+#'
+#' @seealso
+#' [get_azure_token]
+#'
+#' @examples
+#' \dontrun{
+#'
+#' cert_assertion("mycert.pem", duration=2*3600)
+#' cert_assertion("mycert.pem", custom_data="some text")
+#'
+#' # using a cert stored in Key Vault
+#' cert <- AzureKeyVault::key_vault("myvault")$certificates$get("mycert")
+#' cert_assertion(cert, duration=2*3600)
+#' 
+#' } 
 #' @export
 cert_assertion <- function(certificate, duration=3600, signature_size=256, ...)
 {
