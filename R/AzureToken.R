@@ -28,7 +28,7 @@ public=list(
 
     initialize=function(tenant, app, password=NULL, username=NULL, certificate=NULL, auth_type=NULL,
                         aad_host="https://login.microsoftonline.com/",
-                        authorize_args=list(), token_args=list())
+                        authorize_args=list(), token_args=list(), on_behalf_of=NULL)
     {
         # fail if this constructor is called directly
         if(is.null(self$version))
@@ -36,9 +36,9 @@ public=list(
 
         self$aad_host <- aad_host
         self$tenant <- normalize_tenant(tenant)
-        self$auth_type <- select_auth_type(password, username, certificate, auth_type)
+        self$auth_type <- select_auth_type(password, username, certificate, auth_type, on_behalf_of)
 
-        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type)
+        self$client <- aad_request_credentials(app, password, username, certificate, self$auth_type, on_behalf_of)
 
         self$authorize_args <- authorize_args
         self$token_args <- token_args
@@ -48,6 +48,7 @@ public=list(
             authorization_code=init_authcode,
             device_code=init_devcode,
             client_credentials=init_clientcred,
+            on_behalf_of=init_clientcred,
             resource_owner=init_resowner
         )
         environment(private$initfunc) <- parent.env(environment())
