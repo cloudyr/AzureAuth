@@ -37,7 +37,7 @@
 #' 
 #' 4. The **resource_owner** method also requires only one step. In this method, `get_azure_token` passes your (personal) username and password to the AAD access endpoint, which validates your credentials and returns the token.
 #'
-#' 5. The **on_behalf_of** method is used when you have already have an OAuth token for one Azure resource, and want to authenticate to another resource. Rather than repeating the authentication process, you pass your original token to AAD which extracts your credentials from it.
+#' 5. The **on_behalf_of** method is used to authenticate with an Azure resource using a token obtained beforehand. It is mostly used by intermediate services to authenticate for users.
 #'
 #' If the authentication method is not specified, it is chosen based on the presence or absence of the `password`,  `username` and `certificate` arguments, and whether httpuv is installed.
 #'
@@ -89,6 +89,11 @@
 #' # authenticate to your resource with the resource_owner method: provide your username and password
 #' get_azure_token("https://myresource/", tenant="mytenant", app="app_id",
 #'     username="user", password="abcdefg")
+#'
+#' # authenticate with on-behalf-of: obtain a token object, then pass it
+#' tok1 <- get_azure_token("app_id2", tenant="mytenant", app="app_id")
+#' tok2 <- get_azure_token("https://myresource/", tenant="mytenant", app="app_id2",
+#'     password="app_secret", auth_type="on_behalf_of", on_behalf_of=tok1)
 #'
 #'
 #' # use a different redirect URI to the default localhost:1410
