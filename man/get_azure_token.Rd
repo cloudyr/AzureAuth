@@ -147,9 +147,10 @@ get_azure_token("https://management.azure.com/", tenant="mytenant", app="app_id"
 get_azure_token("https://myresource/", tenant="mytenant", app="app_id",
     username="user", password="abcdefg")
 
-# authenticating with on-behalf-of: authenticate (interactively) once...
-tok0 <- get_azure_token("serviceapp_id", tenant="mytenant", app="clientapp_id")
-# ...then get tokens for multiple resources (Resource Manager and MS Graph)
+# obtaining multiple tokens: authenticate (interactively) once...
+tok0 <- get_azure_token("serviceapp_id", tenant="mytenant", app="clientapp_id",
+    auth_type="authorization_code")
+# ...then get tokens for each resource (Resource Manager and MS Graph) with on_behalf_of
 tok1 <- get_azure_token("https://management.azure.com/", tenant="mytenant," app="serviceapp_id",
     password="serviceapp_secret", on_behalf_of=tok0)
 tok2 <- get_azure_token("https://graph.microsoft.com/", tenant="mytenant," app="serviceapp_id",
