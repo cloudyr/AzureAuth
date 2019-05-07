@@ -111,9 +111,9 @@ public=list(
 
         res <- if(!is.null(self$credentials$refresh_token))
         {
-            body <- utils::modifyList(self$client,
-                list(grant_type="refresh_token", refresh_token=self$credentials$refresh_token))
-            body <- private$build_access_body(body)
+            body <- list(grant_type="refresh_token",
+                client_id=self$client$client_id,
+                refresh_token=self$credentials$refresh_token)
 
             uri <- private$aad_endpoint("token")
             httr::POST(uri, body=body, encode="form")
