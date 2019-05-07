@@ -94,7 +94,7 @@ One particular use of the \code{authorize_args} argument is to specify a differe
 \item The \strong{on_behalf_of} method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once: see the examples below.
 }
 
-If the authentication method is not specified, it is chosen based on the presence or absence of the \code{password},  \code{username} and \code{certificate} arguments, and whether httpuv is installed.
+If the authentication method is not specified, it is chosen based on the presence or absence of the other arguments, and whether httpuv is installed.
 
 The httpuv package must be installed to use the authorization_code method, as this requires a web server to listen on the (local) redirect URI. See \link[httr:oauth2.0_token]{httr::oauth2.0_token} for more information; note that Azure does not support the \code{use_oob} feature of the httr OAuth 2.0 token class.
 

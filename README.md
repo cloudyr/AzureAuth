@@ -74,9 +74,9 @@ get_azure_token("myresource", "mytenant", "app_id",
 tok0 <- get_azure_token("serviceapp_id", "mytenant", "clientapp_id")
 # ...then get tokens for each resource
 tok1 <- get_azure_token("resource1", "mytenant," "serviceapp_id",
-                        password="serviceapp_secret", on_behalf_of=tok0)
+                        password="serviceapp_secret", auth_type="on_behalf_of", on_behalf_of=tok0)
 tok2 <- get_azure_token("resource2", "mytenant," "serviceapp_id",
-                        password="serviceapp_secret", on_behalf_of=tok0)
+                        password="serviceapp_secret", auth_type="on_behalf_of", on_behalf_of=tok0)
 ```
 
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
@@ -84,6 +84,10 @@ If you don't specify the method, `get_azure_token` makes a best guess based on t
 ```r
 # this will default to authorization_code if httpuv is installed, and device_code if not
 get_azure_token("myresource", "mytenant", "app_id")
+
+# this will use on_behalf_of method
+get_azure_token("myresource", "mytenant", "app_id",
+                password="client_secret", on_behalf_of=token)
 ```
 
 ## Acknowledgements
