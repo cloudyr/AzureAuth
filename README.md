@@ -67,6 +67,18 @@ get_azure_token("myresource", "mytenant", "app_id",
                 username="myusername", password="mypassword", auth_type="resource_owner")
 ```
 
+5. The **on_behalf_of** method is used to authenticate with an Azure resource by passing a token obtained beforehand. It is mostly used by intermediate apps to authenticate for users. In particular, you can use this method to obtain tokens for multiple resources, while only requiring the user to authenticate once.
+
+```r
+# obtaining multiple tokens with on_behalf_of: authenticate (interactively) once...
+tok0 <- get_azure_token("serviceapp_id", "mytenant", "clientapp_id")
+# ...then get tokens for each resource
+tok1 <- get_azure_token("resource1", "mytenant," "serviceapp_id",
+                        password="serviceapp_secret", on_behalf_of=tok0)
+tok2 <- get_azure_token("resource2", "mytenant," "serviceapp_id",
+                        password="serviceapp_secret", on_behalf_of=tok0)
+```
+
 If you don't specify the method, `get_azure_token` makes a best guess based on the presence or absence of the other authentication arguments, and whether httpuv is installed.
 
 ```r
