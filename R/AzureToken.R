@@ -113,7 +113,11 @@ public=list(
         {
             body <- list(grant_type="refresh_token",
                 client_id=self$client$client_id,
-                refresh_token=self$credentials$refresh_token)
+                client_secret=self$client$client_secret,
+                client_assertion=self$client$client_assertion,
+                client_assertion_type=self$client$client_assertion_type,
+                refresh_token=self$credentials$refresh_token
+            )
 
             uri <- private$aad_endpoint("token")
             httr::POST(uri, body=body, encode="form")
